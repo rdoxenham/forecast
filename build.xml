@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<project name="Forecast" default="main" basedir=".">
+	<!-- Sets variables which can later be used. -->
+	<!-- The value of a property is accessed via ${} -->
+	<property name="src.dir" location="src" />
+	<property name="build.dir" location="build" />
+	<property name="dist.dir" location="dist" />
+	<property name="rpm.dir" location="rpm" />
+	<property name="lib.dir" location="lib" />
+
+	<!-- Deletes the existing build, docs and dist directory-->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+
+	<!-- Creates the  build, docs and dist directory-->
+	<target name="makedir">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+	<!-- Compiles the java code (including the usage of library for JUnit -->
+	<target name="compile" depends="clean, makedir">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime = "false" classpath="lib/apache-commons-daemon-1.0.2.jar" />
+
+	</target>
+
+	<!--Creates the deployable jar file  -->
+	<target name="jar" depends="compile">
+		<jar destfile="${dist.dir}\forecast.jar" basedir="${build.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="Forecast" />
+			</manifest>
+			<zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+		</jar>
+	</target>
+	
+	<target name = "rpm">
+			<mkdir dir="${build.dir}/rpm/RPMS" />
+			<mkdir dir="${build.dir}/rpm/SPECS" />
+			<mkdir dir="${build.dir}/rpm/SOURCES" />
+			<mkdir dir="${build.dir}/rpm/BUILD" />
+			<mkdir dir="${build.dir}/rpm/SRPMS" />
+			<mkdir dir="${build.dir}/rpm/INSTALL" />
+			<copy todir="${build.dir}/rpm/SPECS" file="extra/forecast.spec" />
+			<copy todir="${build.dir}/rpm/INSTALL/opt/forecast/" file="${dist.dir}/forecast.jar" />
+			<copy todir="${build.dir}/rpm/INSTALL/usr/bin/" file="extra/forecast" />
+			<copy todir="${build.dir}/rpm/INSTALL/etc/init.d/" file="extra/forecast-service" />
+			<copy todir="${build.dir}/rpm/INSTALL/usr/share/forecast/" file="extra/forecast.conf.sample" />
+			<copy todir="${build.dir}/rpm/INSTALL/usr/share/forecast/" file="extra/forecast.sql" />
+			<rpm specFile = "forecast.spec" topdir = "${build.dir}/rpm" cleanBuildDir = "true" failOnError = "true" command = "-bb --buildroot=${build.dir}/rpm/INSTALL"/>
+	</target>
+
+	<target name="main" depends="compile, jar, rpm">
+		<description>Forecast Main</description>
+	</target>
+
+</project>
