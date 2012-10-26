@@ -13,7 +13,7 @@ public class VM
 	int vCPUs;
 	int vMem;
 	double unitCount;
-	
+
 	public VM(String name, String id, String hyp, String type, int cpus, int mem)
 	{
 		this.vmName = name;

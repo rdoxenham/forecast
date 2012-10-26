@@ -1,0 +1,7 @@
+# Forecast Configuration File
+
+# Database Information
+DB_TYPE=postgres
+DB_PATH=forecast
+DB_USER=forecast
+DB_PASS=forecast

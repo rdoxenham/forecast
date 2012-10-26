@@ -79,15 +79,15 @@ public class FCDatabase
 	
 	public ArrayList<FCAdaptor> getAdaptors()
 	{
-		// TODO add support for mysql here :-/
 		ArrayList <FCAdaptor> adaptors = new ArrayList<FCAdaptor>();
-		
+
 		try
 		{
 			db = DriverManager.getConnection("jdbc:postgresql:" + dbPath, dbUser, dbPass);
 			sql = db.createStatement();
-			ResultSet results = sql.executeQuery("SELECT * FROM adaptors");
-			
+			ResultSet results = sql.executeQuery("SELECT * FROM adaptors WHERE adaptor_enabled is true;");
+			results.close();
+
 			if(results != null)
 			{
 				while(results.next())
@@ -112,7 +112,6 @@ public class FCDatabase
 					adaptors.add(tempAdaptor);
 				}
 			
-				results.close();
 			}
 		}
 	
@@ -137,7 +136,8 @@ public class FCDatabase
 				db = DriverManager.getConnection("jdbc:postgresql:" + dbPath, dbUser, dbPass);
 				sql = db.createStatement();
 				ResultSet results = sql.executeQuery("SELECT * FROM vm_stats");
-				
+				results.close();
+
 				if(results != null)
 				{
 					while(results.next())
@@ -154,7 +154,6 @@ public class FCDatabase
 						dbVMList.add(tempVM);
 					}
 					
-					results.close();
 				}
 			}
 			
@@ -257,7 +256,7 @@ public class FCDatabase
 				catch(Exception err)
 				{
 					// Need to reconsider returning false here... it's not technically a fail - gets messy!
-					//return false;
+					return false;
 				}
 			}
 		}

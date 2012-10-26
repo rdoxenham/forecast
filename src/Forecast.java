@@ -15,6 +15,7 @@ public class Forecast implements Daemon
 	public static String configLoc = "/etc/forecast.conf";
 	
 	public ArrayList<FCAdaptor> workerList;
+	public ArrayList<FCAdaptor> oldWorkers = new ArrayList<FCAdaptor>();
 	public ArrayList<VM> updateVMList = new ArrayList<VM>();
 	public FCDatabase dbWorker;
 	public Date now;
@@ -47,15 +48,6 @@ public class Forecast implements Daemon
 			System.out.println("\nERROR: Database cannot be found or connection problem! [Exiting]");
 			System.exit(0);
 		}
-		
-		workerList = dbWorker.getAdaptors();
-		System.out.println("Found " + workerList.size() + " adaptor profile(s).");
-		
-		if (workerList.size() == 0)
-		{
-			System.out.println("Please configure adaptors using 'forecast --configure' [Exiting]");
-			System.exit(0);
-		}
 	}
 	
 	public void start_exec()
@@ -68,8 +60,40 @@ public class Forecast implements Daemon
 				now = new Date();
 				System.out.println("\nForecast executing at: " + now);
 				
-				// Firstly, lets grab the latest copy of *all* VM's from each adaptor
-				
+				if (!oldWorkers.isEmpty())
+				{
+					ArrayList<FCAdaptor> tempList = new ArrayList<FCAdaptor>();
+					tempList = dbWorker.getAdaptors();
+
+					for(FCAdaptor newAdaptor: dbWorker.getAdaptors())
+					{
+						int i = 0;
+
+						for(FCAdaptor oldAdaptor: oldWorkers)
+						{
+							if (newAdaptor.connectionURL.equals(oldAdaptor.connectionURL))
+							{
+								tempList.remove(i);
+								tempList.add(oldAdaptor);
+							}
+						}
+
+						i++;
+					}
+					workerList = tempList;
+				}
+
+				else workerList = dbWorker.getAdaptors();
+
+				if (workerList.size() == 0)
+				{
+					System.out.println("WARNING: No adaptors found or are all disabled. Halting until next scan!");
+					System.out.println("Please configure adaptors using 'forecast --configure'");
+					return;
+				}
+
+				else System.out.println("Found " + workerList.size() + " adaptor profile(s).");
+
 				for(FCAdaptor anAdaptor: workerList)
 				{
 					int success = anAdaptor.execute();
@@ -78,10 +102,7 @@ public class Forecast implements Daemon
 						updateVMList.addAll(anAdaptor.getLatest());
 					}
 				}
-				
-				// If *existing* list is empty, it's either first-run, so quit()
-				// or there's nothing to update, no RHEL VM's have been running!
-				
+
 				if(updateVMList.size() != 0)
 				{	
 					if(dbWorker.dbUpdate(updateVMList))
@@ -100,6 +121,8 @@ public class Forecast implements Daemon
 				{
 					System.out.println("Nothing to update at this time. Skipping database-update.");
 				}
+
+				oldWorkers = workerList;
 			}
 			
 		}, 0, (interval_minutes * 60 * 1000));
@@ -116,8 +139,8 @@ public class Forecast implements Daemon
 	@Override
     public void start() throws Exception
     {
-		System.out.println("Red Hat Cloud Forecast v1.0: Started");
-		System.out.println("------------------------------------");
+		System.out.println("Forecast v1.0: Started");
+		System.out.println("----------------------");
         main(null);
     }
 

@@ -27,7 +27,6 @@ public abstract class FCAdaptor
 	public ArrayList<VM> getLatest()
 	{
 		tempVMList.clear();
-		
 		if(oldVMList.size() > 0)
 		{
 			for(VM thisVM: newVMList)
@@ -40,7 +39,7 @@ public abstract class FCAdaptor
 					}
 				}
 			}
-			
+
 			oldVMList = newVMList;
 			newVMList.clear();
 		}

@@ -67,6 +67,7 @@ public class RHEVAdaptor extends FCAdaptor
 				
 				newVMList.clear();
 				UnitPrices prices = new UnitPrices();
+				int unknown_count = 0;
 				
 				for (int i = 0; i < nodes.getLength(); i++) 
 				{
@@ -85,17 +86,20 @@ public class RHEVAdaptor extends FCAdaptor
 					Long memLong = Long.parseLong(memString)/1048576;
 					int vMem = memLong.intValue();
 					String vmStatus = xpath.evaluate("status/state/text()", element);
-					
+
+					if(osType.equalsIgnoreCase("unassigned")) unknown_count++;
 					if(vmStatus.equals("up") || vmStatus.equals("UP"))
 					{
 						if(osType.contains("rhel") || osType.contains("RHEL"))
 						{
 							VM tempVM = new VM(vmName, vmID, "RHEV", osType, vCPUs, vMem);
-							tempVM.setCount(prices.getUnits(vCPUs));
+							tempVM.setCount(prices.getUnits(vCPUs, vMem));
 							newVMList.add(tempVM);
 						}
 					}
 				}
+
+				if (unknown_count > 0) System.out.format("WARNING: %s VM(s) have *unassigned* OS type!\n", unknown_count);
 			}
 			
 			catch(Exception err)
